@@ -1,10 +1,22 @@
 <script>
+import { mapStores } from 'pinia'
+import { useAuthStore } from '@/stores/AuthStore'
+
 export default {
   name: 'AppHeader',
+  computed: {
+    ...mapStores(useAuthStore),
+  },
   methods: {
     handleLogin() {
-      // TODO : implémenter la connexion Google via Supabase (étape suivante)
-      console.log('Connexion Google — à implémenter')
+      this.authStore.loginWithGoogle()
+    },
+    async handleLogout() {
+      await this.authStore.logout()
+      // retour à la page d'accueil après déconnexion (exigé par l'énoncé)
+      if (this.$route.name !== 'home') {
+        this.$router.push({ name: 'home' })
+      }
     },
   },
 }
@@ -19,8 +31,8 @@ export default {
       </h1>
     </div>
 
-    <!-- Menu + bouton connexion -->
-    <nav class="px-6 py-3 flex items-center justify-between">
+    <!-- Menu + zone connexion -->
+    <nav class="px-6 py-3 flex items-center justify-between flex-wrap gap-4">
       <ul class="flex gap-6">
         <li>
           <RouterLink
@@ -31,41 +43,63 @@ export default {
             Accueil
           </RouterLink>
         </li>
-        <li>
-          <RouterLink
-            :to="{ name: 'roles' }"
-            class="hover:text-amber-300 transition-colors"
-            active-class="text-amber-300 font-semibold"
-          >
-            Changer de rôle
-          </RouterLink>
-        </li>
-        <li>
-          <RouterLink
-            :to="{ name: 'texts' }"
-            class="hover:text-amber-300 transition-colors"
-            active-class="text-amber-300 font-semibold"
-          >
-            Gérer les textes
-          </RouterLink>
-        </li>
-        <li>
-          <RouterLink
-            :to="{ name: 'stats' }"
-            class="hover:text-amber-300 transition-colors"
-            active-class="text-amber-300 font-semibold"
-          >
-            Statistiques
-          </RouterLink>
-        </li>
+        <!-- Les liens protégés ne s'affichent QUE si l'utilisateur est connecté -->
+        <template v-if="authStore.isAuthenticated">
+          <li>
+            <RouterLink
+              :to="{ name: 'roles' }"
+              class="hover:text-amber-300 transition-colors"
+              active-class="text-amber-300 font-semibold"
+            >
+              Changer de rôle
+            </RouterLink>
+          </li>
+          <li>
+            <RouterLink
+              :to="{ name: 'texts' }"
+              class="hover:text-amber-300 transition-colors"
+              active-class="text-amber-300 font-semibold"
+            >
+              Gérer les textes
+            </RouterLink>
+          </li>
+          <li>
+            <RouterLink
+              :to="{ name: 'stats' }"
+              class="hover:text-amber-300 transition-colors"
+              active-class="text-amber-300 font-semibold"
+            >
+              Statistiques
+            </RouterLink>
+          </li>
+        </template>
       </ul>
 
-      <button
-        @click="handleLogin"
-        class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded transition-colors"
-      >
-        Connexion avec Google
-      </button>
+      <!-- Zone connexion / déconnexion -->
+      <div class="flex items-center gap-3">
+        <!-- Si pas connecté : bouton Login -->
+        <button
+          v-if="!authStore.isAuthenticated"
+          @click="handleLogin"
+          class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded transition-colors"
+        >
+          Connexion avec Google
+        </button>
+
+        <!-- Si connecté : email + bouton Logout -->
+        <template v-else>
+          <span class="text-sm text-slate-300">
+            Connecté en tant que <br />
+            <strong class="text-white">{{ authStore.displayName }}</strong>
+          </span>
+          <button
+            @click="handleLogout"
+            class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded transition-colors"
+          >
+            Déconnexion
+          </button>
+        </template>
+      </div>
     </nav>
   </header>
 </template>
