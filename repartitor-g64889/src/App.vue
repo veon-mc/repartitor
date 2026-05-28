@@ -1,6 +1,7 @@
 <script>
 import { mapStores } from 'pinia'
 import { useAuthStore } from '@/stores/AuthStore'
+import { useRoleStore } from '@/stores/RoleStore'   // ← AJOUT
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
 
@@ -8,11 +9,11 @@ export default {
   name: 'App',
   components: { AppHeader, AppFooter },
   computed: {
-    ...mapStores(useAuthStore),
+    ...mapStores(useAuthStore, useRoleStore),   // ← AJOUT
   },
   created() {
-    // initialise le store une seule fois au démarrage
     this.authStore.init()
+    this.roleStore.init()   // ← AJOUT : restaure le rôle depuis localStorage
   },
 }
 </script>
