@@ -140,3 +140,95 @@ export async function getAllTextsWithStatus() {
     }
   })
 }
+
+/**
+ * Récupère un texte unique avec son état d'attribution complet
+ * (traduction et édition s'il y en a).
+ * @param {number} textId
+ * @returns {Promise<Object>} texte enrichi { ...text, translation, edition }
+ */
+export async function getTextWithStatus(textId) {
+  const [textRes, translationRes, editionRes] = await Promise.all([
+    supabase
+      .from('text')
+      .select('id, cote, title, received, deadline, wordcount, precedent')
+      .eq('id', textId)
+      .single(),
+    supabase
+      .from('translation')
+      .select('text, translator, attributed, deadline, finished')
+      .eq('text', textId)
+      .maybeSingle(),
+    supabase
+      .from('edition')
+      .select('text, editor, attributed, finished, translated_by')
+      .eq('text', textId)
+      .maybeSingle(),
+  ])
+
+  if (textRes.error) throw textRes.error
+  if (translationRes.error) throw translationRes.error
+  if (editionRes.error) throw editionRes.error
+
+  return {
+    ...textRes.data,
+    translation: translationRes.data ?? null,
+    edition: editionRes.data ?? null,
+  }
+}
+
+/**
+ * Attribue un traducteur à un texte.
+ * @param {number} textId
+ * @param {string} translatorId trigramme du traducteur
+ * @param {string} deadline date ISO de la deadline de la traduction
+ * @returns {Promise<Object>} la traduction créée
+ */
+export async function attributeTranslation(textId, translatorId, deadline) {
+  const { data, error } = await supabase
+    .from('translation')
+    .insert({
+      text: textId,
+      translator: translatorId,
+      attributed: new Date().toISOString(),
+      deadline: deadline,
+      // 'finished' reste null (NULL) tant que la traduction n'est pas terminée
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Erreur lors de l'attribution de la traduction :", error)
+    throw error
+  }
+
+  return data
+}
+
+/**
+ * Attribue un éditeur à un texte.
+ * Le 'translated_by' doit être renseigné (le trigramme du traducteur déjà attribué).
+ * @param {number} textId
+ * @param {string} editorId trigramme de l'éditeur
+ * @param {string} translatedBy trigramme du traducteur ayant traduit ce texte
+ * @returns {Promise<Object>} l'édition créée
+ */
+export async function attributeEdition(textId, editorId, translatedBy) {
+  const { data, error } = await supabase
+    .from('edition')
+    .insert({
+      text: textId,
+      editor: editorId,
+      attributed: new Date().toISOString(),
+      translated_by: translatedBy,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Erreur lors de l'attribution de l'édition :", error)
+    throw error
+  }
+
+  return data
+}
