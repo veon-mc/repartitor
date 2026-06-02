@@ -85,3 +85,58 @@ export async function getTextsForEditor(editorId) {
     translatedBy: row.translated_by,
   }))
 }
+
+/**
+ * Récupère TOUS les textes avec leur état d'attribution
+ * (traduction et édition), pour la vue répartiteur.
+ *
+ * On combine 3 requêtes :
+ *  - tous les textes
+ *  - toutes les traductions (avec leur traducteur)
+ *  - toutes les éditions (avec leur éditeur)
+ *
+ * Puis on assemble côté JS car PostgREST ne permet pas facilement
+ * un LEFT JOIN multiple avec sélection optionnelle.
+ *
+ * @returns {Promise<Array>} liste enrichie de textes avec leur statut
+ */
+export async function getAllTextsWithStatus() {
+  const [textsRes, translationsRes, editionsRes] = await Promise.all([
+    supabase
+      .from('text')
+      .select('id, cote, title, received, deadline, wordcount, precedent')
+      .order('deadline', { ascending: true }),
+    supabase
+      .from('translation')
+      .select('text, translator, attributed, deadline, finished'),
+    supabase
+      .from('edition')
+      .select('text, editor, attributed, finished, translated_by'),
+  ])
+
+  if (textsRes.error) throw textsRes.error
+  if (translationsRes.error) throw translationsRes.error
+  if (editionsRes.error) throw editionsRes.error
+
+  // Indexation des attributions par id de texte pour des lookups en O(1)
+  const translationByText = new Map()
+  for (const t of translationsRes.data) {
+    translationByText.set(t.text, t)
+  }
+  const editionByText = new Map()
+  for (const e of editionsRes.data) {
+    editionByText.set(e.text, e)
+  }
+
+  // On enrichit chaque texte avec son statut
+  return textsRes.data.map((text) => {
+    const translation = translationByText.get(text.id) ?? null
+    const edition = editionByText.get(text.id) ?? null
+
+    return {
+      ...text,
+      translation, // null si pas attribué
+      edition,     // null si pas attribué
+    }
+  })
+}
