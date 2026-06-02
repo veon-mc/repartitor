@@ -8,6 +8,7 @@ import TextsTraductionView from '@/views/texts/TextsTraductionView.vue'
 import TextsEditionView from '@/views/texts/TextsEditionView.vue'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useRoleStore, ROLES } from '@/stores/RoleStore'
+import TextAttributionView from '@/views/texts/TextAttributionView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -54,6 +55,13 @@ const router = createRouter({
           name: 'texts-edition',
           component: TextsEditionView,
           meta: { requiresAuth: true, requiresRole: ROLES.EDITOR },
+        },
+        {
+          path: 'attribute/:id',
+          name: 'text-attribution',
+          component: TextAttributionView,
+          props: true,
+          meta: { requiresAuth: true, requiresRole: ROLES.REPARTITOR },
         },
       ],
     },
