@@ -55,11 +55,12 @@ export async function getTextsForTranslator(translatorId) {
 }
 
 /**
- * Récupère les textes attribués à un éditeur donné.
- * Comme pour le traducteur, on part de la table 'edition'.
+ * Récupère les textes attribués à un éditeur donné, avec l'état
+ * de la traduction (pour savoir si elle est terminée).
  * @param {string} editorId trigramme de l'éditeur
  */
 export async function getTextsForEditor(editorId) {
+  // 1. On récupère les éditions de cet éditeur + le texte associé
   const { data, error } = await supabase
     .from('edition')
     .select(`
@@ -71,19 +72,45 @@ export async function getTextsForEditor(editorId) {
       )
     `)
     .eq('editor', editorId)
-    .order('text(deadline)', { ascending: true })
 
   if (error) {
     console.error('Erreur lors de la récupération des éditions :', error)
     throw error
   }
 
-  return data.map((row) => ({
-    ...row.text,
-    attributed: row.attributed,
-    finished: row.finished,
-    translatedBy: row.translated_by,
-  }))
+  if (data.length === 0) return []
+
+  // 2. On récupère l'état des traductions pour ces textes
+  // (pour savoir si chaque traduction est terminée)
+  const textIds = data.map((row) => row.text.id)
+  const { data: translations, error: translationsError } = await supabase
+    .from('translation')
+    .select('text, translator, finished')
+    .in('text', textIds)
+
+  if (translationsError) {
+    console.error('Erreur lors de la récupération des traductions :', translationsError)
+    throw translationsError
+  }
+
+  // 3. Indexation par id de texte
+  const translationByText = new Map()
+  for (const t of translations) {
+    translationByText.set(t.text, t)
+  }
+
+  // 4. On reformate
+  return data.map((row) => {
+    const translation = translationByText.get(row.text.id) ?? null
+    return {
+      ...row.text,
+      attributed: row.attributed,
+      finished: row.finished,
+      translatedBy: row.translated_by,
+      // état de la traduction (utile pour savoir si on peut commencer à éditer)
+      translationFinished: translation?.finished ?? null,
+    }
+  })
 }
 
 /**
@@ -227,6 +254,50 @@ export async function attributeEdition(textId, editorId, translatedBy) {
 
   if (error) {
     console.error("Erreur lors de l'attribution de l'édition :", error)
+    throw error
+  }
+
+  return data
+}
+
+/**
+ * Marque une traduction comme terminée (date courante).
+ * @param {number} textId
+ * @param {string} translatorId trigramme du traducteur
+ */
+export async function finishTranslation(textId, translatorId) {
+  const { data, error } = await supabase
+    .from('translation')
+    .update({ finished: new Date().toISOString() })
+    .eq('text', textId)
+    .eq('translator', translatorId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Erreur lors de la validation de la traduction :', error)
+    throw error
+  }
+
+  return data
+}
+
+/**
+ * Marque une édition comme terminée (date courante).
+ * @param {number} textId
+ * @param {string} editorId trigramme de l'éditeur
+ */
+export async function finishEdition(textId, editorId) {
+  const { data, error } = await supabase
+    .from('edition')
+    .update({ finished: new Date().toISOString() })
+    .eq('text', textId)
+    .eq('editor', editorId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Erreur lors de la validation de l'édition :", error)
     throw error
   }
 
