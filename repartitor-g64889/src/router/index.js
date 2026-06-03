@@ -2,10 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import RolesView from '@/views/RolesView.vue'
 import TextsView from '@/views/TextsView.vue'
-import StatsView from '@/views/StatsView.vue'
 import TextsRepartitionView from '@/views/texts/TextsRepartitionView.vue'
 import TextsTraductionView from '@/views/texts/TextsTraductionView.vue'
 import TextsEditionView from '@/views/texts/TextsEditionView.vue'
+import StatsGlobalView from '@/views/stats/StatsGlobalView.vue'
+import StatsTranslatorView from '@/views/stats/StatsTranslatorView.vue'
+import StatsEditorView from '@/views/stats/StatsEditorView.vue'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useRoleStore, ROLES } from '@/stores/RoleStore'
 import TextAttributionView from '@/views/texts/TextAttributionView.vue'
@@ -67,9 +69,42 @@ const router = createRouter({
     },
     {
       path: '/stats',
-      name: 'stats',
-      component: StatsView,
       meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'stats',
+          component: StatsGlobalView,
+          // Le répartiteur voit les stats globales ; les autres sont redirigés
+          // vers leur propre page individuelle.
+          beforeEnter: () => {
+            const roleStore = useRoleStore()
+            if (roleStore.isTranslator && roleStore.person) {
+              return { name: 'stats-translator', params: { id: roleStore.person.id } }
+            }
+            if (roleStore.isEditor && roleStore.person) {
+              return { name: 'stats-editor', params: { id: roleStore.person.id } }
+            }
+            return true
+          },
+        },
+        {
+          path: 'translator/:id',
+          name: 'stats-translator',
+          component: StatsTranslatorView,
+          props: true,
+          meta: { requiresAuth: true },
+          // On vérifie l'accès dans la vue elle-même (un traducteur ne doit
+          // voir QUE ses propres stats), pas dans le router (plus simple)
+        },
+        {
+          path: 'editor/:id',
+          name: 'stats-editor',
+          component: StatsEditorView,
+          props: true,
+          meta: { requiresAuth: true },
+        },
+      ],
     },
   ],
 })
