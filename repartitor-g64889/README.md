@@ -1,44 +1,94 @@
-# repartitor-g64889
+# Repartitor
 
-This template should help get you started developing with Vue 3 in Vite.
+Outil de gestion des textes pour un service de traduction.
 
-## Recommended IDE Setup
+Projet 4WEB3 — Développement WEB 3 — HE2B ESI — 2025/2026
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Stack
 
-## Recommended Browser Setup
+- Vue 3 (Options API)
+- Vue Router
+- Pinia
+- Supabase (Auth Google + PostgreSQL)
+- Tailwind CSS 
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+## Installation
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+## Configuration
 
-```sh
+Crée un fichier `.env` à la racine du projet à partir du modèle :
+
+```bash
+cp .env.example .env
+```
+
+Puis remplis-le avec tes propres identifiants Supabase :
+
+```env
+VITE_SUPABASE_URL="https://your-project-id.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY="sb_publishable_xxxxxxxxxxxx"
+```
+
+## Lancement
+
+```bash
 npm run dev
 ```
 
-### Compile and Minify for Production
+Le site est accessible sur [http://localhost:5173](http://localhost:5173).
 
-```sh
-npm run build
-```
+## Authentification
 
-### Lint with [ESLint](https://eslint.org/)
+L'authentification se fait via Google OAuth (provider HE2B). Il faut être
+connecté avec un compte de l'organisation HE2B pour accéder aux pages
+protégées.
 
-```sh
-npm run lint
-```
+## Structure du projet
+
+src/
+├── assets/                 # styles globaux (Tailwind)
+├── components/             # composants réutilisables
+│   ├── AppHeader.vue       # en-tête avec menu et connexion
+│   ├── AppFooter.vue
+│   ├── PersonTable.vue     # tableau de personnes (traducteurs / éditeurs)
+│   ├── MyTextsTable.vue    # tableau "mes textes" (traducteur / éditeur)
+│   ├── TextStatusBadge.vue # badge d'état d'une traduction/édition
+│   ├── DateRangePicker.vue # sélecteur d'intervalle pour les stats
+│   └── StatCard.vue        # carte affichant une statistique
+├── lib/
+│   └── supabase.js         # initialisation du client Supabase
+├── router/
+│   └── index.js            # routes + gardes (auth + rôles)
+├── services/
+│   ├── translatorService.js
+│   ├── editorService.js
+│   ├── textService.js
+│   └── statsService.js
+├── stores/                 # Pinia
+│   ├── AuthStore.js
+│   └── RoleStore.js
+├── views/
+│   ├── HomeView.vue
+│   ├── RolesView.vue
+│   ├── TextsView.vue       # parent (RouterView des sous-routes)
+│   ├── texts/
+│   │   ├── TextsRepartitionView.vue
+│   │   ├── TextsTraductionView.vue
+│   │   ├── TextsEditionView.vue
+│   │   └── TextAttributionView.vue
+│   └── stats/
+│       ├── StatsGlobalView.vue
+│       ├── StatsTranslatorView.vue
+│       └── StatsEditorView.vue
+├── App.vue
+└── main.js
+ressource/                  # scripts SQL pour la base
+
+## 📝 Notes
+
+Les fonctionnalités avancées implémentées au-delà du strict énoncé sont
+listées dans la page d'accueil de l'application (section "Notes du développeur").
