@@ -113,6 +113,7 @@ export default {
         await this.loadAll()
         this.closePicker()
       } catch (e) {
+        console.error("Erreur lors de l'attribution du traducteur :", e)
         this.submitError = "Échec de l'attribution. Vérifie que ce traducteur n'a pas déjà ce texte."
       } finally {
         this.isSubmitting = false
@@ -135,6 +136,7 @@ export default {
         await this.loadAll()
         this.closePicker()
       } catch (e) {
+        console.error("Erreur lors de l'attribution de l'éditeur :", e)
         this.submitError = "Échec de l'attribution. Vérifie que cet éditeur n'a pas déjà ce texte."
       } finally {
         this.isSubmitting = false
