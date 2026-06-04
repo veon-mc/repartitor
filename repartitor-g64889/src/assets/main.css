@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+/*
+ * Safelist : classes générées dynamiquement dans StatCard
+ * Tailwind ne les détecte pas car elles sont dans des chaînes computed.
+ */
+@source inline("border-l-slate-500 border-l-green-500 border-l-amber-500 border-l-red-500 text-slate-700 text-green-700 text-amber-700 text-red-700");
