@@ -1,94 +1,87 @@
 # Repartitor
 
-Outil de gestion des textes pour un service de traduction.
+A web app to manage the workflow of a translation service: distribute texts to translators and editors, track the status of each translation and edit, and monitor team activity through statistics.
 
-Projet 4WEB3 — Développement WEB 3 — HE2B ESI — 2025/2026
+<!-- Add a screenshot or GIF of the app here -->
+<!-- ![Repartitor screenshot](docs/screenshot.png) -->
 
-## Stack
+## Features
 
-- Vue 3 (Options API)
-- Vue Router
-- Pinia
-- Supabase (Auth Google + PostgreSQL)
-- Tailwind CSS 
+- **Google sign-in** with Supabase Auth
+- **Role-based access**: routes are protected by auth and role guards
+- **Role management** for translators and editors
+- **Text distribution**: assign texts to translators and editors
+- **Personal dashboards**: each translator or editor sees their own texts and their status
+- **Statistics**: global, per-translator and per-editor stats over a custom date range
 
-## Installation
+## Tech Stack
+
+| Layer      | Technology                         |
+| ---------- | ---------------------------------- |
+| Frontend   | Vue 3 (Options API), Vue Router    |
+| State      | Pinia                              |
+| Styling    | Tailwind CSS                       |
+| Backend    | Supabase (PostgreSQL + Auth)       |
+| Build tool | Vite                               |
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js and npm
+- A [Supabase](https://supabase.com) project with the Google auth provider enabled
+
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-## Configuration
-
-Crée un fichier `.env` à la racine du projet à partir du modèle :
+### 2. Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Puis remplis-le avec tes propres identifiants Supabase :
+Then fill in your Supabase credentials:
 
 ```env
 VITE_SUPABASE_URL="https://your-project-id.supabase.co"
 VITE_SUPABASE_PUBLISHABLE_KEY="sb_publishable_xxxxxxxxxxxx"
 ```
 
-## Lancement
+### 3. Set up the database
+
+Run the SQL scripts from the `ressource/` folder in your Supabase project (SQL Editor).
+
+### 4. Run the app
 
 ```bash
 npm run dev
 ```
 
-Le site est accessible sur [http://localhost:5173](http://localhost:5173).
+The app is available at [http://localhost:5173](http://localhost:5173).
 
-## Authentification
+> **Note:** sign-in is currently restricted to accounts from the HE2B Google organization.
 
-L'authentification se fait via Google OAuth (provider HE2B). Il faut être
-connecté avec un compte de l'organisation HE2B pour accéder aux pages
-protégées.
+## Project Structure
 
-## Structure du projet
-
+```
 src/
-├── assets/                 # styles globaux (Tailwind)
-├── components/             # composants réutilisables
-│   ├── AppHeader.vue       # en-tête avec menu et connexion
-│   ├── AppFooter.vue
-│   ├── PersonTable.vue     # tableau de personnes (traducteurs / éditeurs)
-│   ├── MyTextsTable.vue    # tableau "mes textes" (traducteur / éditeur)
-│   ├── TextStatusBadge.vue # badge d'état d'une traduction/édition
-│   ├── DateRangePicker.vue # sélecteur d'intervalle pour les stats
-│   └── StatCard.vue        # carte affichant une statistique
-├── lib/
-│   └── supabase.js         # initialisation du client Supabase
-├── router/
-│   └── index.js            # routes + gardes (auth + rôles)
-├── services/
-│   ├── translatorService.js
-│   ├── editorService.js
-│   ├── textService.js
-│   └── statsService.js
-├── stores/                 # Pinia
-│   ├── AuthStore.js
-│   └── RoleStore.js
+├── assets/         # Global styles (Tailwind)
+├── components/     # Reusable UI components (tables, status badges, stat cards...)
+├── lib/            # Supabase client setup
+├── router/         # Routes and auth/role guards
+├── services/       # Data access layer (texts, translators, editors, stats)
+├── stores/         # Pinia stores (auth, roles)
 ├── views/
-│   ├── HomeView.vue
-│   ├── RolesView.vue
-│   ├── TextsView.vue       # parent (RouterView des sous-routes)
-│   ├── texts/
-│   │   ├── TextsRepartitionView.vue
-│   │   ├── TextsTraductionView.vue
-│   │   ├── TextsEditionView.vue
-│   │   └── TextAttributionView.vue
-│   └── stats/
-│       ├── StatsGlobalView.vue
-│       ├── StatsTranslatorView.vue
-│       └── StatsEditorView.vue
+│   ├── texts/      # Distribution, translation, editing and assignment views
+│   └── stats/      # Global, translator and editor statistics
 ├── App.vue
 └── main.js
-ressource/                  # scripts SQL pour la base
+ressource/          # SQL scripts for the database
+```
 
-## 📝 Notes
+## Context
 
-Les fonctionnalités avancées implémentées au-delà du strict énoncé sont
-listées dans la page d'accueil de l'application (section "Notes du développeur").
+Built as a course project for *Web Development 3* at HE2B ESI (2025–2026).
